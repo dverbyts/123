@@ -1,0 +1,16 @@
+## use ## sumbols at string startup for mark strings as comments ## 
+## write ip of this server##
+1.1.1.0
+
+## write ip of next lvl server ##
+1.1.2.0
+
+## write answer for black list domain ##
+not resolved
+
+## write domains black list separated by new_line ##
+mail.ru
+vk.com
+
+
+## end ##
