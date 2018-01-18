@@ -3,8 +3,17 @@
 
 # include <stdio.h>
 # include <fcntl.h>
+# include <stdlib.h>
+# include <string.h>
+# include <unistd.h>
+//сеть
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+# include <netdb.h>
 
 # define PORT 53
+# define BUFF_SIZE 1
 
 typedef struct			s_line
 {
@@ -15,18 +24,21 @@ typedef struct			s_line
 
 typedef struct			s_blc_list
 {
-	char				*blc_donain = NULL;
-	t_blc_list			*next_domain = NULL;
+	char				*blc_donain;
+	struct s_blc_list	*next_domain;
 }						t_blc_list;
 
 typedef struct			s_config
 {
-	int					my_ip[4] = {0, 0, 0, 0};
-	int					hi_ip[4] = {0, 0, 0, 0};
-	char				*black_domain_answer = NULL;
-	t_blc_list			*black_list = NULL;
+	char				*my_ip;
+	char				*hi_ip;
+	char				*black_domain_answer;
+	struct s_blc_list	*black_list;
 }						t_config;
 
 extern t_config			*g_c;
+
+
+
 
 #endif

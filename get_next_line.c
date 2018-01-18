@@ -12,6 +12,100 @@
 
 #include "DNS.h"
 
+char	*ft_strjoin(char *t, char *y)
+{
+	char	*r;
+	int		i;
+	int		x;
+
+	if (!t || !y)
+		return (0);
+	if (!(r = (char *)malloc(sizeof(char) * (strlen(t) + strlen(y) + 1))))
+		return (0);
+	i = 0;
+	x = 0;
+	while (t[i])
+		r[x++] = t[i++];
+	i = 0;
+	while (y[i])
+		r[x++] = y[i++];
+	r[x] = '\0';
+	return (r);
+}
+
+void	ft_strdel(char **ap)
+{
+	if (!ap || !*ap)
+		return ;
+	free(*ap);
+	*ap = NULL;
+}
+
+void	ft_bzero(void *s, size_t n)
+{
+	size_t x;
+
+	x = 0;
+	if (!n)
+		return ;
+	while (n)
+	{
+		((char *)s)[x] = 0;
+		n--;
+		x++;
+	}
+}
+
+void	*ft_memalloc(size_t size)
+{
+	void *memory;
+
+	if (!size)
+		return (NULL);
+	memory = (void *)malloc(size);
+	if (!memory)
+		return (NULL);
+	ft_bzero(memory, size);
+	return (memory);
+}
+
+char	*ft_strnew(size_t size)
+{
+	char *str;
+
+	str = ft_memalloc(size + 1);
+	return (str);
+}
+
+char	*ft_strsub(char const *s, unsigned int start, size_t len)
+{
+	char	*re;
+	size_t	i;
+
+	if (!s)
+		return (0);
+	if (start > strlen(s))
+		return (0);
+	if (!(re = (char *)malloc(sizeof(char) * (len + 1))))
+		return (0);
+	i = 0;
+	while (i < len)
+	{
+		re[i] = s[start];
+		i++;
+		start++;
+	}
+	re[i] = '\0';
+	return (re);
+}
+
+void	ft_memdel(void **ap)
+{
+	if (*ap)
+		free(*ap);
+	*ap = NULL;
+}
+
 int		read_file(t_line **lst, int fd)
 {
 	t_line	*buf;
@@ -24,8 +118,8 @@ int		read_file(t_line **lst, int fd)
 	while ((ret = read(fd, b, BUFF_SIZE)) > 0)
 	{
 		b[ret] = '\0';
-		tmp = strjoin(buf->l, b);
-		strdel(&buf->l);
+		tmp = ft_strjoin(buf->l, b);
+		ft_strdel(&buf->l);
 		buf->l = tmp;
 		if (strrchr(b, 10) != NULL)
 			break ;
@@ -60,13 +154,13 @@ char	*string(t_line **tmp)
 	while (ptr->l[i] != '\n' && ptr->l[i] != '\0')
 		i++;
 	len = strlen(ptr->l);
-	str = strsub(ptr->l, 0, i);
+	str = ft_strsub(ptr->l, 0, i);
 	if (len == i)
-		src = strnew(0);
+		src = ft_strnew(0);
 	else
-		src = strsub(ptr->l, i + 1, len - i - 1);
+		src = ft_strsub(ptr->l, i + 1, len - i - 1);
 	if (*(ptr->l) != '\0')
-		memdel((void *)&ptr->l);
+		ft_memdel((void *)&ptr->l);
 	ptr->l = src;
 	return (str);
 }

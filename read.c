@@ -1,5 +1,7 @@
-
 #include "DNS.h"
+
+int		get_next_line(const int fd, char **line);
+void	ft_strdel(char **ap);
 
 int		is_ip(char *line)
 {
@@ -13,22 +15,7 @@ int		is_ip(char *line)
 	return (1);
 }
 
-void	parse_ip(char *line, int flag)///////////////////split
-{
-	char		**ip;
-
-	ip = split(line, '.');
-	for (int i = 0; i < 4; ++i)
-	{
-		flag == 0 ? g_c->my_ip[i] = atoi(ip[i]) : g_c->hi_ip[i] = atoi(ip[i]);
-		if (ip[i])
-			free(&ip[i]);
-	}
-	if (ip)
-		free(&ip);
-}
-
-void	parse_config_info(char *str)
+void	parse_config_info(int fd)
 {
 	char 		*line = NULL;
 	int			flag = 0;
@@ -37,8 +24,11 @@ void	parse_config_info(char *str)
 
 	while (get_next_line(fd, &line) == 1) // read && parse config_file line by line
 	{
-		if ((flag == 0 || flag == 1) && is_ip(line))//find string vs ip
-			parse_ip(line, flag++);
+		if ((flag == 0 || flag == 1) && is_ip(line) && line[0] != '\0' && line[0] != '\n')//find string vs ip
+		{
+			flag == 0 ? (g_c->my_ip = strdup(line)) : (g_c->hi_ip = strdup(line));
+			flag++;
+		}
 		else if (flag == 2 && line[0] != '\0' && line[0] != '#' && line[1] != '#' && line[0] != '\n')//find string vs server answer
 		{
 			g_c->black_domain_answer = strdup(line);
@@ -59,20 +49,6 @@ void	parse_config_info(char *str)
 				buf1->next_domain = buf2;
 			}
 		}
-		strdel(&line);
+		ft_strdel(&line);
 	}
-}
-
-int		main(int argc, char **argv)
-{
-	int			fd = -1;
-	t_config	*g_c;
-
-	if (argc != 2) // if !config_file, print usage && exit
-		return (usage());
-	if (!(g_c = (t_config *)malloc(sizeof(t_config)))) //malloc memory for global variable
-		return (0); //exit program, if memory not allocated
-	fd = open(argv[1], O_RDONLY); // take fd for read config file
-	parse_config_info(fd); // read config info
-	close(fd); // close fd
 }
