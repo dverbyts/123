@@ -11,8 +11,8 @@ int		main(int argc, char **argv)
 	struct		sockaddr_in to;
 	int			socket_in_fd;
 	int			socket_to_fd;
-	void		*buf;
-	ssize_t		recsize;
+	char		buf[2014];
+	ssize_t		receive;
 	socklen_t	*from_len = NULL;
 
 	if (argc != 2) // if !config_file, print usage && exit
@@ -46,12 +46,12 @@ int		main(int argc, char **argv)
 
 	while(1)
 	{
-		//printf( "recv test....\n" );
-		recsize = recvfrom(socket_in_fd, (void *)buf, 100, 0, (struct sockaddr *)&in, from_len);
-		if ( recsize < 0 )
-			fprintf( stderr, "Ошибка %s\n", strerror( errno ) );
+		receive = recvfrom(socket_in_fd, buf, 1024, 0, (struct sockaddr *)&in, from_len);
+		buf[receive] = '\0';
+//		if ( recsize < 0 )
+//			fprintf( stderr, "Ошибка %s\n", strerror( errno ) );
 		//printf("recsize: %d\n ", recsize);
-		sleep(1);
+//		sleep(1);
 		//printf("datagram: %s\n",buf);
 
 		// 576 байт гарантировано дойдет
