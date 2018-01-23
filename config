@@ -1,6 +1,6 @@
 ## use ## sumbols at string startup for mark strings as comments ## 
 ## write ip of this server##
-1.1.1.0
+0.0.0.0
 
 ## write ip of next lvl server ##
 1.1.2.0

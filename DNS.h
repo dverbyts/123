@@ -7,13 +7,12 @@
 # include <string.h>
 # include <unistd.h>
 //сеть
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
-# include <netdb.h>
 
-# define PORT 53
+
+# define PORT 12345
+# define ANY_PORT 12345
 # define BUFF_SIZE 1
+# define TIME_OUT 32767
 
 typedef struct			s_line
 {
