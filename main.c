@@ -7,6 +7,20 @@ t_config	*g_c;
 
 void		parse_config_info(int fd);
 
+int		in_list(char *buf)
+{
+	t_blc_list *tmp;
+
+	tmp = g_c->black_list;
+	while (tmp != NULL)
+	{
+		if (strcmp(tmp->blc_donain, buf))
+			return (1);
+		tmp = tmp->next_domain;
+	}
+	return (0);
+}
+
 int		main(int argc, char **argv)
 {
 	int			fd;
@@ -50,15 +64,10 @@ int		main(int argc, char **argv)
 	server.sin_port = htons(1233);
 	server.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	memset(&server_new, 0, sizeof server);
-	server_new.sin_family = AF_INET;
-	server_new.sin_port = htons(++ANY_PORT);
-	server_new.sin_addr.s_addr = htonl(INADDR_ANY);
-
 	memset(&dns_adr, 0, sizeof dns_adr);
 	dns_adr.sin_family = AF_INET;
 	dns_adr.sin_port = htons(PORT);
-	dns_adr.sin_addr.s_addr = inet_aton(g_c->hi_ip);
+	dns_adr.sin_addr.s_addr = inet_addr(g_c->hi_ip);
 
 	memset(&client, 0, sizeof client);
 	client.sin_family = AF_INET;
@@ -74,64 +83,76 @@ int		main(int argc, char **argv)
 	{
 		// printf("port_server: %i\naddr_server: %i\n", server.sin_port, server.sin_addr);
 		// printf("port_client: %i\naddr_client: %i\n\n", client.sin_port, client.sin_addr);
-		if ((receive = recvfrom(socket_fd, buf, sizeof(buf), 0, (struct sockaddr *)&client, &from_len)) < 0)
+		receive = recvfrom(socket_fd, buf, sizeof(buf), 0, (struct sockaddr *)&client, &from_len);
+		if (receive > 0 && in_list(buf))
 		{
-			perror("receivefrom");
-			close(socket_fd);
-			exit(EXIT_FAILURE);
+			if ((sent = sendto(socket_fd, g_c->black_domain_answer, strlen(g_c->black_domain_answer), 0, (struct sockaddr*)&client, sizeof(client))) < 0)
+				perror("sendto");
 		}
 		else if (receive > 0)
 		{
-			memset(&client_adr, 0, sizeof client_adr);
+			memset(&client_adr, 0, sizeof(client_adr));
 			client_adr.sin_family = AF_INET;
 			client_adr.sin_port = client.sin_port;
 			client_adr.sin_addr.s_addr = client.sin_addr.s_addr;
+			memset(&server_new, 0, sizeof(server));
+			server_new.sin_family = AF_INET;
+			server_new.sin_port = htons(0);
+			server_new.sin_addr.s_addr = htonl(INADDR_ANY);
 			switch (fork())
 			{
 				case -1:
-				perror("fork");
-				break;
+					perror("fork");
+					break;
 
 				case 0:
-				break;
+					break;
 
 				default:
-				socket_fd_new = socket(AF_INET, SOCK_DGRAM, 0);
-				if ((bind(socket_fd_new, (struct sockaddr *)&server_new, sizeof(server))) < 0)
-				{
-					perror("bind");
-					close(socket_fd_new);
-					_exit(EXIT_FAILURE);
-				}
-				if ((sent = sendto(socket_fd_new, buf, strlen(buf), 0, (struct sockaddr*)&dns_adr, sizeof(dns_adr))) < 0)
-				{
-					perror("sendto");
-					close(socket_fd_new);
-					_exit(EXIT_FAILURE);
-				}
-				int i = 0
-				while (i++ < TIME_OUT)
-				{
-					if ((receive = recvfrom(socket_fd_new, buf2, sizeof(buf2), 0, NULL, NULL)) < 0)
+					socket_fd_new = socket(AF_INET, SOCK_DGRAM, 0);
+					if (socket_fd < 0)
 					{
-						perror("receivefrom");
-						close(socket_fd);
+						perror("socket_fd");
 						_exit(EXIT_FAILURE);
 					}
-					if ((sent = sendto(socket_fd, buf2, strlen(buf2), 0, (struct sockaddr*)&client_adr, sizeof(client_adr))) < 0)
+					if ((bind(socket_fd_new, (struct sockaddr *)&server_new, sizeof(server_new))) < 0)
+					{
+						perror("bind");
+						close(socket_fd_new);
+						_exit(EXIT_FAILURE);
+					}
+					//buf = datagram_adr(buf, server_new);
+					if ((sent = sendto(socket_fd_new, buf, strlen(buf), 0, (struct sockaddr*)&dns_adr, sizeof(dns_adr))) < 0)
 					{
 						perror("sendto");
 						close(socket_fd_new);
 						_exit(EXIT_FAILURE);
 					}
-					i = TIME_OUT;
-					if (i == TIME_OUT)
+					int i = 0;
+					while (i++ < TIME_OUT)
 					{
-						close(socket_fd_new);
-						_exit(1);
+						if ((receive = recvfrom(socket_fd_new, buf2, sizeof(buf2), 0, NULL, NULL)) < 0)
+						{
+							perror("receivefrom");
+							close(socket_fd);
+							_exit(EXIT_FAILURE);
+						}
+						//buf2 = datagram_adr(buf2, server);
+						if ((sent = sendto(socket_fd, buf2, strlen(buf2), 0, (struct sockaddr*)&client_adr, sizeof(client_adr))) < 0)
+						{
+							perror("sendto");
+							close(socket_fd_new);
+							_exit(EXIT_FAILURE);
+						}
+						else
+							i = TIME_OUT;
+						if (i == TIME_OUT)
+						{
+							close(socket_fd_new);
+							_exit(EXIT_FAILURE);
+						}
 					}
-				}
-				break;
+					_exit(1);
 			}
 		}
 		// printf("receive: %i\n", receive);
